@@ -67,6 +67,15 @@
 #include <sstream>
 #include <string>
 
+// mmWave carriers allow up to 16 component carriers (3GPP TR 38.802),
+// unlike LTE which allows up to 5 (see MIN_NO_CC/MAX_NO_CC).
+#ifndef MIN_NO_MMW_CC
+#define MIN_NO_MMW_CC 1
+#endif
+#ifndef MAX_NO_MMW_CC
+#define MAX_NO_MMW_CC 16
+#endif
+
 namespace ns3
 {
 
