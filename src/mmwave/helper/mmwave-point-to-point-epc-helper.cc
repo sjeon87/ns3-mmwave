@@ -36,8 +36,9 @@
 #include <ns3/config.h>
 #include <ns3/epc-enb-application.h>
 #include <ns3/epc-mme-application.h>
-#include <ns3/epc-s1ap.h>
-#include <ns3/epc-sgw-pgw-application.h>
+#include <ns3/epc-pgw-application.h>
+#include <ns3/epc-s1ap-sap.h>
+#include <ns3/epc-sgw-application.h>
 #include <ns3/epc-ue-nas.h>
 #include <ns3/epc-x2.h>
 #include <ns3/eps-bearer.h>

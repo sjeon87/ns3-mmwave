@@ -48,11 +48,5 @@ MmWaveErrorModel::GetTypeId(void)
     return tid;
 }
 
-TypeId
-MmWaveErrorModel::GetInstanceTypeId() const
-{
-    return MmWaveErrorModel::GetTypeId();
-}
-
 } // namespace mmwave
 } // namespace ns3

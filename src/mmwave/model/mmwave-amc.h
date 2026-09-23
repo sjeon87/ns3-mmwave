@@ -59,12 +59,6 @@ class MmWaveAmc : public Object
     static TypeId GetTypeId(void);
 
     /**
-     * \brief GetInstanceTypeId
-     * \return the instance typeid
-     */
-    TypeId GetInstanceTypeId() const override;
-
-    /**
      * \brief MmWaveAmc constructor, not to be used!
      */
     MmWaveAmc();

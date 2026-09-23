@@ -37,6 +37,7 @@
 #include <ns3/abort.h>
 #include <ns3/cc-helper.h>
 #include <ns3/channel-condition-model.h>
+#include <ns3/component-carrier-enb.h>
 #include <ns3/double.h>
 #include <ns3/epc-enb-application.h>
 #include <ns3/epc-x2.h>
@@ -1250,7 +1251,7 @@ MmWaveHelper::InstallSingleMcUeDevice(Ptr<Node> n)
         ccPhy->GetDlSpectrumPhy()->SetLtePhyRxPssCallback(
             MakeCallback(&LteUePhy::ReceivePss, ccPhy));
         ccPhy->GetDlSpectrumPhy()->SetLtePhyDlHarqFeedbackCallback(
-            MakeCallback(&LteUePhy::ReceiveLteDlHarqFeedback, ccPhy));
+            MakeCallback(&LteUePhy::EnqueueDlHarqFeedback, ccPhy));
     }
 
     lteNas->SetDevice(device);
@@ -2142,7 +2143,7 @@ MmWaveHelper::InstallSingleEnbDevice(Ptr<Node> n)
     if (m_epcHelper)
     {
         NS_LOG_INFO("adding this eNB to the EPC");
-        m_epcHelper->AddEnb(n, device, device->GetCellId());
+        m_epcHelper->AddEnb(n, device, std::vector<uint16_t>{device->GetCellId()});
         Ptr<EpcEnbApplication> enbApp = n->GetApplication(0)->GetObject<EpcEnbApplication>();
         NS_ASSERT_MSG(enbApp, "cannot retrieve EpcEnbApplication");
 
@@ -2154,7 +2155,6 @@ MmWaveHelper::InstallSingleEnbDevice(Ptr<Node> n)
         Ptr<EpcX2> x2 = n->GetObject<EpcX2>();
         x2->SetEpcX2SapUser(rrc->GetEpcX2SapUser());
         rrc->SetEpcX2SapProvider(x2->GetEpcX2SapProvider());
-        rrc->SetEpcX2RlcProvider(x2->GetEpcX2RlcProvider());
     }
 
     return device;
@@ -2394,7 +2394,7 @@ MmWaveHelper::InstallSingleLteEnbDevice(Ptr<Node> n)
         ccPhy->GetUlSpectrumPhy()->SetLtePhyRxCtrlEndOkCallback(
             MakeCallback(&LteEnbPhy::ReceiveLteControlMessageList, ccPhy));
         ccPhy->GetUlSpectrumPhy()->SetLtePhyUlHarqFeedbackCallback(
-            MakeCallback(&LteEnbPhy::ReceiveLteUlHarqFeedback, ccPhy));
+            MakeCallback(&LteEnbPhy::ReportUlHarqFeedback, ccPhy));
         NS_LOG_LOGIC("set the propagation model frequencies");
         double dlFreq = LteSpectrumValueHelper::GetCarrierFrequency(it->second->m_dlEarfcn);
         NS_LOG_LOGIC("DL freq: " << dlFreq);
@@ -2427,7 +2427,7 @@ MmWaveHelper::InstallSingleLteEnbDevice(Ptr<Node> n)
     if (m_epcHelper)
     {
         NS_LOG_INFO("adding this eNB to the EPC");
-        m_epcHelper->AddEnb(n, dev, dev->GetCellId());
+        m_epcHelper->AddEnb(n, dev, std::vector<uint16_t>{dev->GetCellId()});
         Ptr<EpcEnbApplication> enbApp = n->GetApplication(0)->GetObject<EpcEnbApplication>();
         NS_ASSERT_MSG(enbApp, "cannot retrieve EpcEnbApplication");
 
@@ -2439,7 +2439,6 @@ MmWaveHelper::InstallSingleLteEnbDevice(Ptr<Node> n)
         Ptr<EpcX2> x2 = n->GetObject<EpcX2>();
         x2->SetEpcX2SapUser(rrc->GetEpcX2SapUser());
         rrc->SetEpcX2SapProvider(x2->GetEpcX2SapProvider());
-        rrc->SetEpcX2PdcpProvider(x2->GetEpcX2PdcpProvider());
     }
 
     return dev;
@@ -2596,7 +2595,6 @@ MmWaveHelper::AttachMcToClosestEnb(Ptr<NetDevice> ueDevice,
     {
         // activate default EPS bearer
         m_epcHelper->ActivateEpsBearer(ueDevice,
-                                       lteUeNas,
                                        mcDevice->GetImsi(),
                                        EpcTft::Default(),
                                        EpsBearer(EpsBearer::NGBR_VIDEO_TCP_DEFAULT));
@@ -2680,7 +2678,6 @@ MmWaveHelper::AttachIrToClosestEnb(Ptr<NetDevice> ueDevice,
     {
         // activate default EPS bearer
         m_epcHelper->ActivateEpsBearer(ueDevice,
-                                       lteUeNas,
                                        mcDevice->GetImsi(),
                                        EpcTft::Default(),
                                        EpsBearer(EpsBearer::NGBR_VIDEO_TCP_DEFAULT));

@@ -69,8 +69,7 @@ struct MmWaveErrorModelOutput : public SimpleRefCount<MmWaveErrorModelOutput>
  * \brief Interface for calculating the error probability for a transport block
  *
  * Any error model that wishes to work in Spectrum or in AMC should use
- * this class as a base class. Please implement The GetInstanceTypeId method
- * in your subclasses.
+ * this class as a base class.
  *
  * \section nr_error_model_conf Configuration
  *
@@ -95,12 +94,6 @@ class MmWaveErrorModel : public Object
      * \return the TypeId of the class
      */
     static TypeId GetTypeId();
-
-    /**
-     * \brief Get the type ID of this instance
-     * \return the Type ID of this instance
-     */
-    TypeId GetInstanceTypeId(void) const override;
 
     /**
      * \brief MmWaveErrorModel default constructor
