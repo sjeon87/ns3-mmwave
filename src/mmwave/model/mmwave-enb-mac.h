@@ -183,6 +183,9 @@ class MmWaveEnbMac : public Object
 
     // forwarded from LteCcmMacSapProvider
     void DoReportMacCeToScheduler(MacCeListElement_s bsr);
+    // LteCcmMacSapProvider hook added in dev; mmWave MAC has no native SR path,
+    // so trigger the scheduler with an empty BSR report.
+    void DoReportSrToScheduler(uint16_t rnti);
 
     /**
      * TracedCallback signature for
@@ -199,7 +202,7 @@ class MmWaveEnbMac : public Object
 
   private:
     // forwarded from LteEnbCmacSapProvider
-    void DoConfigureMac(uint8_t ulBandwidth, uint8_t dlBandwidth);
+    void DoConfigureMac(uint16_t ulBandwidth, uint16_t dlBandwidth);
     void DoAddUe(uint16_t rnti);
     void DoRemoveUe(uint16_t rnti);
     void DoAddLc(LteEnbCmacSapProvider::LcInfo lcinfo, LteMacSapUser* msu);

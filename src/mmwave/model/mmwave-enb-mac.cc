@@ -40,6 +40,8 @@
 #include "mmwave-phy-mac-common.h"
 
 #include <ns3/log.h>
+#include <ns3/ff-mac-common.h>
+#include <ns3/lte-common.h>
 #include <ns3/lte-enb-cmac-sap.h>
 #include <ns3/lte-mac-sap.h>
 
@@ -63,7 +65,7 @@ class MmWaveEnbMacMemberEnbCmacSapProvider : public LteEnbCmacSapProvider
     MmWaveEnbMacMemberEnbCmacSapProvider(MmWaveEnbMac* mac);
 
     // inherited from LteEnbCmacSapProvider
-    virtual void ConfigureMac(uint8_t ulBandwidth, uint8_t dlBandwidth);
+    void ConfigureMac(uint16_t ulBandwidth, uint16_t dlBandwidth) override;
     virtual void AddUe(uint16_t rnti);
     virtual void RemoveUe(uint16_t rnti);
     virtual void AddLc(LcInfo lcinfo, LteMacSapUser* msu);
@@ -83,10 +85,11 @@ MmWaveEnbMacMemberEnbCmacSapProvider::MmWaveEnbMacMemberEnbCmacSapProvider(MmWav
 }
 
 void
-MmWaveEnbMacMemberEnbCmacSapProvider::ConfigureMac(uint8_t ulBandwidth, uint8_t dlBandwidth)
+MmWaveEnbMacMemberEnbCmacSapProvider::ConfigureMac(uint16_t ulBandwidth, uint16_t dlBandwidth)
 {
     m_mac->DoConfigureMac(ulBandwidth, dlBandwidth);
 }
+
 
 void
 MmWaveEnbMacMemberEnbCmacSapProvider::AddUe(uint16_t rnti)
@@ -820,6 +823,15 @@ MmWaveEnbMac::DoReportMacCeToScheduler(MacCeListElement_s bsr)
 }
 
 void
+MmWaveEnbMac::DoReportSrToScheduler(uint16_t rnti)
+{
+    MacCeListElement_s bsr;
+    bsr.m_rnti = rnti;
+    bsr.m_macCeType = MacCeListElement_s::BSR;
+    DoReportMacCeToScheduler(bsr);
+}
+
+void
 MmWaveEnbMac::DoUlHarqFeedback(UlHarqInfo params)
 {
     NS_LOG_FUNCTION(this);
@@ -1095,7 +1107,7 @@ MmWaveEnbMac::TraceSchedInfo(MmWaveMacSchedSapUser::SchedConfigIndParameters ind
 // ////////////////////////////////////////////
 
 void
-MmWaveEnbMac::DoConfigureMac(uint8_t ulBandwidth, uint8_t dlBandwidth)
+MmWaveEnbMac::DoConfigureMac(uint16_t ulBandwidth, uint16_t dlBandwidth)
 {
     NS_LOG_FUNCTION(this << " ulBandwidth=" << (uint16_t)ulBandwidth
                          << " dlBandwidth=" << (uint16_t)dlBandwidth);
@@ -1193,8 +1205,8 @@ MmWaveEnbMac::DoAddLc(LteEnbCmacSapProvider::LcInfo lcinfo, LteMacSapUser* msu)
         lccle.m_logicalChannelIdentity = lcinfo.lcId;
         lccle.m_logicalChannelGroup = lcinfo.lcGroup;
         lccle.m_direction = LogicalChannelConfigListElement_s::DIR_BOTH;
-        lccle.m_qosBearerType = lcinfo.isGbr ? LogicalChannelConfigListElement_s::QBT_GBR
-                                             : LogicalChannelConfigListElement_s::QBT_NON_GBR;
+        lccle.m_qosBearerType =
+            static_cast<LogicalChannelConfigListElement_s::QosBearerType_e>(lcinfo.resourceType);
         lccle.m_qci = lcinfo.qci;
         lccle.m_eRabMaximulBitrateUl = lcinfo.mbrUl;
         lccle.m_eRabMaximulBitrateDl = lcinfo.mbrDl;
