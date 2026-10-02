@@ -44,19 +44,19 @@
 #include <ns3/ipv6-address-helper.h>
 #include <ns3/object.h>
 
+#include <vector>
+
 namespace ns3
 {
 
 class Node;
 class NetDevice;
 class VirtualNetDevice;
-class EpcSgwPgwApplication;
+class EpcSgwApplication;
+class EpcPgwApplication;
 class EpcX2;
-class EpcMme;
 class EpcUeNas;
 class EpcMmeApplication;
-class EpcS1apEnb;
-class EpcS1apMme;
 
 namespace mmwave
 {
@@ -91,25 +91,39 @@ class MmWavePointToPointEpcHelper : public EpcHelper
     virtual void DoDispose();
 
     // inherited from EpcHelper
-    virtual void AddEnb(Ptr<Node> enbNode, Ptr<NetDevice> lteEnbNetDevice, uint16_t cellId);
-    virtual void AddUe(Ptr<NetDevice> ueLteDevice, uint64_t imsi);
-    virtual void AddX2Interface(Ptr<Node> enbNode1, Ptr<Node> enbNode2);
-    virtual uint8_t ActivateEpsBearer(Ptr<NetDevice> ueLteDevice,
-                                      uint64_t imsi,
-                                      Ptr<EpcTft> tft,
-                                      EpsBearer bearer);
-    virtual uint8_t ActivateEpsBearer(Ptr<NetDevice> ueLteDevice,
-                                      Ptr<EpcUeNas> ueNas,
-                                      uint64_t imsi,
-                                      Ptr<EpcTft> tft,
-                                      EpsBearer bearer);
-    virtual Ptr<Node> GetPgwNode();
-    virtual Ptr<Node> GetMmeNode();
-    virtual Ipv4InterfaceContainer AssignUeIpv4Address(NetDeviceContainer ueDevices);
-    virtual Ipv6InterfaceContainer AssignUeIpv6Address(NetDeviceContainer ueDevices);
-    virtual Ipv4Address GetUeDefaultGatewayAddress();
-    virtual Ipv6Address GetUeDefaultGatewayAddress6();
-    virtual int64_t AssignStreams(int64_t stream) override;
+    void AddEnb(Ptr<Node> enbNode,
+                Ptr<NetDevice> lteEnbNetDevice,
+                std::vector<uint16_t> cellIds) override;
+    void AddUe(Ptr<NetDevice> ueLteDevice, uint64_t imsi) override;
+    void AddX2Interface(Ptr<Node> enbNode1, Ptr<Node> enbNode2) override;
+    void AddS1Interface(Ptr<Node> enb,
+                        Ipv4Address enbAddress,
+                        Ipv4Address sgwAddress,
+                        std::vector<uint16_t> cellIds) override;
+    uint8_t ActivateEpsBearer(Ptr<NetDevice> ueLteDevice,
+                              uint64_t imsi,
+                              Ptr<EpcTft> tft,
+                              EpsBearer bearer) override;
+    uint8_t ActivateEpsBearer(Ptr<NetDevice> ueLteDevice,
+                              Ptr<EpcUeNas> ueNas,
+                              uint64_t imsi,
+                              Ptr<EpcTft> tft,
+                              EpsBearer bearer);
+    Ptr<Node> GetSgwNode() const override;
+    Ptr<Node> GetPgwNode() const override;
+    Ptr<Node> GetMmeNode();
+    Ipv4InterfaceContainer AssignUeIpv4Address(NetDeviceContainer ueDevices) override;
+    Ipv6InterfaceContainer AssignUeIpv6Address(NetDeviceContainer ueDevices) override;
+    Ipv4Address GetUeDefaultGatewayAddress() override;
+    Ipv6Address GetUeDefaultGatewayAddress6() override;
+    int64_t AssignStreams(int64_t stream) override;
+
+  protected:
+    void NotifyConstructionCompleted() override;
+    virtual void DoAddS1Interface(Ptr<Node> enb,
+                                  Ipv4Address enbAddress,
+                                  Ipv4Address sgwAddress,
+                                  uint16_t cellId);
 
   private:
     MmWavePointToPointEpcHelper(const MmWavePointToPointEpcHelper&);
@@ -124,14 +138,24 @@ class MmWavePointToPointEpcHelper : public EpcHelper
     Ipv6AddressHelper m_uePgwAddressHelper6;
 
     /**
-     * SGW-PGW network element
+     * PGW network element
      */
-    Ptr<Node> m_sgwPgw;
+    Ptr<Node> m_pgw;
 
     /**
-     * SGW-PGW application
+     * SGW network element
      */
-    Ptr<EpcSgwPgwApplication> m_sgwPgwApp;
+    Ptr<Node> m_sgw;
+
+    /**
+     * SGW application
+     */
+    Ptr<EpcSgwApplication> m_sgwApp;
+
+    /**
+     * PGW application
+     */
+    Ptr<EpcPgwApplication> m_pgwApp;
 
     /**
      * TUN device implementing tunneling of user data over GTP-U/UDP/IP
@@ -191,34 +215,9 @@ class MmWavePointToPointEpcHelper : public EpcHelper
 
     /**
      * helper to assign addresses to S1-AP NetDevices
+     * (unused, kept for backward compatibility of saved attribute paths)
      */
     Ipv4AddressHelper m_s1apIpv4AddressHelper;
-
-    /**
-     * The data rate to be used for the next S1-AP link to be created
-     */
-    DataRate m_s1apLinkDataRate;
-
-    /**
-     * The delay to be used for the next S1-AP link to be created
-     */
-    Time m_s1apLinkDelay;
-
-    /**
-     * The MTU of the next S1-AP link to be created.
-     */
-    uint16_t m_s1apLinkMtu;
-
-    /**
-     * UDP port where the UDP Socket is bound, fixed by the standard as
-     * 36412 (it should be sctp, but it is not supported in ns-3)
-     */
-    uint16_t m_s1apUdpPort;
-
-    /**
-     * Map storing for each eNB the corresponding MME NetDevice
-     */
-    std::map<uint16_t, Ptr<NetDevice>> m_cellIdMmeDeviceMap;
 
     /**
      * helper to assign addresses to X2 NetDevices
@@ -240,6 +239,51 @@ class MmWavePointToPointEpcHelper : public EpcHelper
      * because of some big X2 messages, you need a big MTU.
      */
     uint16_t m_x2LinkMtu;
+
+    /**
+     * Helper to assign addresses to S11 NetDevices
+     */
+    Ipv4AddressHelper m_s11Ipv4AddressHelper;
+
+    /**
+     * The data rate to be used for the next S11 link to be created
+     */
+    DataRate m_s11LinkDataRate;
+
+    /**
+     * The delay to be used for the next S11 link to be created
+     */
+    Time m_s11LinkDelay;
+
+    /**
+     * The MTU of the next S11 link to be created
+     */
+    uint16_t m_s11LinkMtu;
+
+    /**
+     * UDP port where the GTPv2-C Socket is bound, fixed by the standard as 2123
+     */
+    uint16_t m_gtpcUdpPort;
+
+    /**
+     * Helper to assign addresses to S5 NetDevices
+     */
+    Ipv4AddressHelper m_s5Ipv4AddressHelper;
+
+    /**
+     * The data rate to be used for the next S5 link to be created
+     */
+    DataRate m_s5LinkDataRate;
+
+    /**
+     * The delay to be used for the next S5 link to be created
+     */
+    Time m_s5LinkDelay;
+
+    /**
+     * The MTU of the next S5 link to be created
+     */
+    uint16_t m_s5LinkMtu;
 };
 
 } // namespace mmwave
