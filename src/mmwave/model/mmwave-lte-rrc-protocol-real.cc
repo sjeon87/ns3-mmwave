@@ -237,6 +237,14 @@ MmWaveLteUeRrcProtocolReal::DoSendNotifySecondaryCellConnected(uint16_t mmWaveRn
 }
 
 void
+MmWaveLteUeRrcProtocolReal::DoSendIdealUeContextRemoveRequest(uint16_t rnti)
+{
+    NS_LOG_FUNCTION(this << rnti);
+    // Secondary mmWave cells hold no UE context; nothing to remove.
+    (void)rnti;
+}
+
+void
 MmWaveLteUeRrcProtocolReal::DoSendRrcConnectionReestablishmentRequest(
     LteRrcSap::RrcConnectionReestablishmentRequest msg)
 {

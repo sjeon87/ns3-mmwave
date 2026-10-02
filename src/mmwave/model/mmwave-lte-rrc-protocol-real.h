@@ -86,6 +86,7 @@ class MmWaveLteUeRrcProtocolReal : public Object
         LteRrcSap::RrcConnectionReestablishmentComplete msg);
     void DoSendMeasurementReport(LteRrcSap::MeasurementReport msg);
     void DoSendNotifySecondaryCellConnected(uint16_t mmWaveRnti, uint16_t mmWaveCellId);
+    void DoSendIdealUeContextRemoveRequest(uint16_t rnti);
 
     void SetEnbRrcSapProvider();
     void DoReceivePdcpPdu(Ptr<Packet> p);

@@ -201,6 +201,14 @@ MmWaveUeRrcProtocolIdeal::DoSendNotifySecondaryCellConnected(uint16_t mmWaveRnti
 }
 
 void
+MmWaveUeRrcProtocolIdeal::DoSendIdealUeContextRemoveRequest(uint16_t rnti)
+{
+    NS_LOG_FUNCTION(this << rnti);
+    // Secondary mmWave cells hold no UE context; nothing to remove.
+    (void)rnti;
+}
+
+void
 MmWaveUeRrcProtocolIdeal::SetEnbRrcSapProvider()
 {
     uint16_t cellId = m_rrc->GetCellId();
