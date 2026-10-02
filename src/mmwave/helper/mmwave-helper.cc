@@ -2180,7 +2180,7 @@ MmWaveHelper::InstallSingleLteEnbDevice(Ptr<Node> n)
 
     NS_ASSERT_MSG(m_lteComponentCarrierPhyParams.size() != 0, "Cannot create enb ccm map.");
     // create component carrier map for this eNb device
-    std::map<uint8_t, Ptr<ComponentCarrierEnb>> ccMap;
+    std::map<uint8_t, Ptr<ComponentCarrierBaseStation>> ccMap;
     for (std::map<uint8_t, ComponentCarrier>::iterator it = m_lteComponentCarrierPhyParams.begin();
          it != m_lteComponentCarrierPhyParams.end();
          ++it)
@@ -2199,7 +2199,7 @@ MmWaveHelper::InstallSingleLteEnbDevice(Ptr<Node> n)
                     "You have to either specify carriers or disable carrier aggregation");
     NS_ASSERT(ccMap.size() == m_noOfLteCcs);
 
-    for (std::map<uint8_t, Ptr<ComponentCarrierEnb>>::iterator it = ccMap.begin();
+    for (std::map<uint8_t, Ptr<ComponentCarrierBaseStation>>::iterator it = ccMap.begin();
          it != ccMap.end();
          ++it)
     {
@@ -2245,11 +2245,13 @@ MmWaveHelper::InstallSingleLteEnbDevice(Ptr<Node> n)
         Ptr<LteEnbMac> mac = CreateObject<LteEnbMac>();
         Ptr<FfMacScheduler> sched = m_lteSchedulerFactory.Create<FfMacScheduler>();
         Ptr<LteFfrAlgorithm> ffrAlgorithm = m_lteFfrAlgorithmFactory.Create<LteFfrAlgorithm>();
-        it->second->SetMac(mac);
-        it->second->SetFfMacScheduler(sched);
-        it->second->SetFfrAlgorithm(ffrAlgorithm);
+        Ptr<ComponentCarrierEnb> ccEnb = DynamicCast<ComponentCarrierEnb>(it->second);
+        NS_ASSERT_MSG(ccEnb, "LTE eNB CC map must hold ComponentCarrierEnb objects");
+        ccEnb->SetMac(mac);
+        ccEnb->SetFfMacScheduler(sched);
+        ccEnb->SetFfrAlgorithm(ffrAlgorithm);
 
-        it->second->SetPhy(phy);
+        ccEnb->SetPhy(phy);
     }
 
     Ptr<LteEnbRrc> rrc = CreateObject<LteEnbRrc>();
@@ -2320,54 +2322,56 @@ MmWaveHelper::InstallSingleLteEnbDevice(Ptr<Node> n)
     rrc->SetLteMacSapProvider(ccmEnbManager->GetLteMacSapProvider());
 
     bool ccmTest;
-    for (std::map<uint8_t, Ptr<ComponentCarrierEnb>>::iterator it = ccMap.begin();
+    for (std::map<uint8_t, Ptr<ComponentCarrierBaseStation>>::iterator it = ccMap.begin();
          it != ccMap.end();
          ++it)
     {
-        it->second->GetPhy()->SetLteEnbCphySapUser(rrc->GetLteEnbCphySapUser(it->first));
-        rrc->SetLteEnbCphySapProvider(it->second->GetPhy()->GetLteEnbCphySapProvider(), it->first);
+        Ptr<ComponentCarrierEnb> ccEnb = DynamicCast<ComponentCarrierEnb>(it->second);
+        NS_ASSERT_MSG(ccEnb, "LTE eNB CC map must hold ComponentCarrierEnb objects");
+        ccEnb->GetPhy()->SetLteEnbCphySapUser(rrc->GetLteEnbCphySapUser(it->first));
+        rrc->SetLteEnbCphySapProvider(ccEnb->GetPhy()->GetLteEnbCphySapProvider(), it->first);
 
-        rrc->SetLteEnbCmacSapProvider(it->second->GetMac()->GetLteEnbCmacSapProvider(), it->first);
-        it->second->GetMac()->SetLteEnbCmacSapUser(rrc->GetLteEnbCmacSapUser(it->first));
+        rrc->SetLteEnbCmacSapProvider(ccEnb->GetMac()->GetLteEnbCmacSapProvider(), it->first);
+        ccEnb->GetMac()->SetLteEnbCmacSapUser(rrc->GetLteEnbCmacSapUser(it->first));
 
-        it->second->GetPhy()->SetComponentCarrierId(it->first);
-        it->second->GetMac()->SetComponentCarrierId(it->first);
+        ccEnb->GetPhy()->SetComponentCarrierId(it->first);
+        ccEnb->GetMac()->SetComponentCarrierId(it->first);
         // FFR SAP
-        it->second->GetFfMacScheduler()->SetLteFfrSapProvider(
-            it->second->GetFfrAlgorithm()->GetLteFfrSapProvider());
-        it->second->GetFfrAlgorithm()->SetLteFfrSapUser(
-            it->second->GetFfMacScheduler()->GetLteFfrSapUser());
-        rrc->SetLteFfrRrcSapProvider(it->second->GetFfrAlgorithm()->GetLteFfrRrcSapProvider(),
+        ccEnb->GetFfMacScheduler()->SetLteFfrSapProvider(
+            ccEnb->GetFfrAlgorithm()->GetLteFfrSapProvider());
+        ccEnb->GetFfrAlgorithm()->SetLteFfrSapUser(
+            ccEnb->GetFfMacScheduler()->GetLteFfrSapUser());
+        rrc->SetLteFfrRrcSapProvider(ccEnb->GetFfrAlgorithm()->GetLteFfrRrcSapProvider(),
                                      it->first);
-        it->second->GetFfrAlgorithm()->SetLteFfrRrcSapUser(rrc->GetLteFfrRrcSapUser(it->first));
+        ccEnb->GetFfrAlgorithm()->SetLteFfrRrcSapUser(rrc->GetLteFfrRrcSapUser(it->first));
         // FFR SAP END
 
         // PHY <--> MAC SAP
-        it->second->GetPhy()->SetLteEnbPhySapUser(it->second->GetMac()->GetLteEnbPhySapUser());
-        it->second->GetMac()->SetLteEnbPhySapProvider(
-            it->second->GetPhy()->GetLteEnbPhySapProvider());
+        ccEnb->GetPhy()->SetLteEnbPhySapUser(ccEnb->GetMac()->GetLteEnbPhySapUser());
+        ccEnb->GetMac()->SetLteEnbPhySapProvider(
+            ccEnb->GetPhy()->GetLteEnbPhySapProvider());
         // PHY <--> MAC SAP END
 
         // Scheduler SAP
-        it->second->GetMac()->SetFfMacSchedSapProvider(
-            it->second->GetFfMacScheduler()->GetFfMacSchedSapProvider());
-        it->second->GetMac()->SetFfMacCschedSapProvider(
-            it->second->GetFfMacScheduler()->GetFfMacCschedSapProvider());
+        ccEnb->GetMac()->SetFfMacSchedSapProvider(
+            ccEnb->GetFfMacScheduler()->GetFfMacSchedSapProvider());
+        ccEnb->GetMac()->SetFfMacCschedSapProvider(
+            ccEnb->GetFfMacScheduler()->GetFfMacCschedSapProvider());
 
-        it->second->GetFfMacScheduler()->SetFfMacSchedSapUser(
-            it->second->GetMac()->GetFfMacSchedSapUser());
-        it->second->GetFfMacScheduler()->SetFfMacCschedSapUser(
-            it->second->GetMac()->GetFfMacCschedSapUser());
+        ccEnb->GetFfMacScheduler()->SetFfMacSchedSapUser(
+            ccEnb->GetMac()->GetFfMacSchedSapUser());
+        ccEnb->GetFfMacScheduler()->SetFfMacCschedSapUser(
+            ccEnb->GetMac()->GetFfMacCschedSapUser());
         // Scheduler SAP END
 
-        it->second->GetMac()->SetLteCcmMacSapUser(ccmEnbManager->GetLteCcmMacSapUser());
+        ccEnb->GetMac()->SetLteCcmMacSapUser(ccmEnbManager->GetLteCcmMacSapUser());
         ccmEnbManager->SetCcmMacSapProviders(it->first,
-                                             it->second->GetMac()->GetLteCcmMacSapProvider());
+                                             ccEnb->GetMac()->GetLteCcmMacSapProvider());
 
         // insert the pointer to the LteMacSapProvider interface of the MAC layer of the specific
         // component carrier
         ccmTest = ccmEnbManager->SetMacSapProvider(it->first,
-                                                   it->second->GetMac()->GetLteMacSapProvider());
+                                                   ccEnb->GetMac()->GetLteMacSapProvider());
 
         if (ccmTest == false)
         {
@@ -2379,10 +2383,11 @@ MmWaveHelper::InstallSingleLteEnbDevice(Ptr<Node> n)
     dev->SetAttribute("CellId", UintegerValue(cellId));
     dev->SetAttribute("LteEnbComponentCarrierManager", PointerValue(ccmEnbManager));
     dev->SetCcMap(ccMap);
-    std::map<uint8_t, Ptr<ComponentCarrierEnb>>::iterator it = ccMap.begin();
+    std::map<uint8_t, Ptr<ComponentCarrierBaseStation>>::iterator it = ccMap.begin();
     dev->SetAttribute("LteEnbRrc", PointerValue(rrc));
     dev->SetAttribute("LteHandoverAlgorithm", PointerValue(handoverAlgorithm));
-    dev->SetAttribute("LteFfrAlgorithm", PointerValue(it->second->GetFfrAlgorithm()));
+    dev->SetAttribute("LteFfrAlgorithm",
+                          PointerValue(DynamicCast<ComponentCarrierEnb>(it->second)->GetFfrAlgorithm()));
 
     if (m_isAnrEnabled)
     {
@@ -2394,7 +2399,7 @@ MmWaveHelper::InstallSingleLteEnbDevice(Ptr<Node> n)
 
     for (it = ccMap.begin(); it != ccMap.end(); ++it)
     {
-        Ptr<LteEnbPhy> ccPhy = it->second->GetPhy();
+        Ptr<LteEnbPhy> ccPhy = DynamicCast<ComponentCarrierEnb>(it->second)->GetPhy();
         ccPhy->SetDevice(dev);
         ccPhy->GetUlSpectrumPhy()->SetDevice(dev);
         ccPhy->GetDlSpectrumPhy()->SetDevice(dev);
@@ -2405,7 +2410,7 @@ MmWaveHelper::InstallSingleLteEnbDevice(Ptr<Node> n)
         ccPhy->GetUlSpectrumPhy()->SetLtePhyUlHarqFeedbackCallback(
             MakeCallback(&LteEnbPhy::ReportUlHarqFeedback, ccPhy));
         NS_LOG_LOGIC("set the propagation model frequencies");
-        double dlFreq = LteSpectrumValueHelper::GetCarrierFrequency(it->second->m_dlEarfcn);
+        double dlFreq = LteSpectrumValueHelper::GetCarrierFrequency(it->second->GetDlEarfcn());
         NS_LOG_LOGIC("DL freq: " << dlFreq);
         bool dlFreqOk =
             m_downlinkPathlossModel->SetAttributeFailSafe("Frequency", DoubleValue(dlFreq));
@@ -2414,7 +2419,7 @@ MmWaveHelper::InstallSingleLteEnbDevice(Ptr<Node> n)
             NS_LOG_WARN("DL propagation model does not have a Frequency attribute");
         }
 
-        double ulFreq = LteSpectrumValueHelper::GetCarrierFrequency(it->second->m_ulEarfcn);
+        double ulFreq = LteSpectrumValueHelper::GetCarrierFrequency(it->second->GetUlEarfcn());
 
         NS_LOG_LOGIC("UL freq: " << ulFreq);
         bool ulFreqOk =
@@ -2430,7 +2435,7 @@ MmWaveHelper::InstallSingleLteEnbDevice(Ptr<Node> n)
 
     for (it = ccMap.begin(); it != ccMap.end(); ++it)
     {
-        m_uplinkChannel->AddRx(it->second->GetPhy()->GetUlSpectrumPhy());
+        m_uplinkChannel->AddRx(DynamicCast<ComponentCarrierEnb>(it->second)->GetPhy()->GetUlSpectrumPhy());
     }
 
     if (m_epcHelper)
