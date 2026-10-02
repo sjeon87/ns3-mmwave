@@ -36,6 +36,7 @@
 #include "mmwave-ue-phy.h"
 
 #include "ns3/mmwave-component-carrier-ue.h"
+#include <ns3/iana-ieee802-numbers.h>
 #include <ns3/callback.h>
 #include <ns3/enum.h>
 #include <ns3/ipv4-header.h>
@@ -182,8 +183,8 @@ bool
 MmWaveUeNetDevice::DoSend(Ptr<Packet> packet, const Address& dest, uint16_t protocolNumber)
 {
     NS_LOG_FUNCTION(this << dest << protocolNumber);
-    NS_ABORT_MSG_IF(protocolNumber != Ipv4L3Protocol::PROT_NUMBER &&
-                        protocolNumber != Ipv6L3Protocol::PROT_NUMBER,
+    NS_ABORT_MSG_IF(protocolNumber != iana::ieee802numbers::IPV4 &&
+                        protocolNumber != iana::ieee802numbers::IPV6,
                     "unsupported protocol " << protocolNumber
                                             << ", only IPv4 and IPv6 are supported");
 

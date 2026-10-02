@@ -29,6 +29,7 @@
 #include "ns3/pointer.h"
 #include "ns3/trace-source-accessor.h"
 #include "ns3/uinteger.h"
+#include "ns3/iana-ieee802-numbers.h"
 #include <ns3/ipv4-l3-protocol.h>
 #include <ns3/ipv6-l3-protocol.h>
 #include <ns3/log.h>
@@ -397,12 +398,12 @@ McUeNetDevice::Receive(Ptr<Packet> p)
     if (p->PeekHeader(ipv4Header) != 0)
     {
         NS_LOG_LOGIC("IPv4 stack...");
-        m_rxCallback(this, p, Ipv4L3Protocol::PROT_NUMBER, Address());
+        m_rxCallback(this, p, iana::ieee802numbers::IPV4, Address());
     }
     else if (p->PeekHeader(ipv6Header) != 0)
     {
         NS_LOG_LOGIC("IPv6 stack...");
-        m_rxCallback(this, p, Ipv6L3Protocol::PROT_NUMBER, Address());
+        m_rxCallback(this, p, iana::ieee802numbers::IPV6, Address());
     }
     else
     {
@@ -659,8 +660,8 @@ bool
 McUeNetDevice::DoSend(Ptr<Packet> packet, const Address& dest, uint16_t protocolNumber)
 {
     NS_LOG_FUNCTION(this << dest << protocolNumber);
-    NS_ABORT_MSG_IF(protocolNumber != Ipv4L3Protocol::PROT_NUMBER &&
-                        protocolNumber != Ipv6L3Protocol::PROT_NUMBER,
+    NS_ABORT_MSG_IF(protocolNumber != iana::ieee802numbers::IPV4 &&
+                        protocolNumber != iana::ieee802numbers::IPV6,
                     "unsupported protocol " << protocolNumber
                                             << ", only IPv4 and IPv6 are supported");
     return m_nas->Send(packet, protocolNumber);
