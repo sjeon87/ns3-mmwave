@@ -151,6 +151,12 @@ class MmWaveNoOpComponentCarrierManager : public LteEnbComponentCarrierManager
      */
     virtual void DoUlReceiveMacCe(MacCeListElement_s bsr, uint8_t componentCarrierId);
     /**
+     * \brief SR hook added in dev LteCcmMacSapUser; no native mmWave SR path.
+     * \param rnti the RNTI
+     * \param componentCarrierId the component carrier ID
+     */
+    virtual void DoUlReceiveSr(uint16_t rnti, uint8_t componentCarrierId);
+    /**
      * \brief Function implements the function of the SAP interface of CCM instance which is used by
      * MAC to notify the PRB occupancy reported by scheduler. \param prbOccupancy the PRB occupancy
      * \param componentCarrierId the component carrier ID
