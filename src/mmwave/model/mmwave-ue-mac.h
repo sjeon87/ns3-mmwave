@@ -114,6 +114,8 @@ class MmWaveUeMac : public Object
                LteMacSapUser* msu);
     void DoRemoveLc(uint8_t lcId);
     void DoReset();
+    void DoNotifyConnectionSuccessful();
+    void DoSetImsi(uint64_t imsi);
 
     void RandomlySelectAndSendRaPreamble();
     void SendRaPreamble(bool contention);
@@ -174,6 +176,7 @@ class MmWaveUeMac : public Object
 
     std::map<uint8_t, LcInfo> m_lcInfoMap;
     uint16_t m_rnti;
+    uint64_t m_imsi{0};
 
     bool m_waitingForRaResponse;
     static uint8_t g_raPreambleId;

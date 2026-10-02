@@ -37,6 +37,8 @@
 #include "mmwave-phy-sap.h"
 
 #include <ns3/log.h>
+#include <ns3/lte-common.h>
+#include <ns3/lte-rlc-sap.h>
 #include <ns3/lte-rlc.h>
 
 namespace ns3
@@ -72,6 +74,8 @@ class UeMemberMmWaveUeCmacSapProvider : public LteUeCmacSapProvider
                        LteMacSapUser* msu);
     virtual void RemoveLc(uint8_t lcId);
     virtual void Reset();
+    virtual void NotifyConnectionSuccessful();
+    virtual void SetImsi(uint64_t imsi);
 
   private:
     MmWaveUeMac* m_mac;
@@ -126,6 +130,31 @@ void
 UeMemberMmWaveUeCmacSapProvider::Reset()
 {
     m_mac->DoReset();
+}
+
+void
+UeMemberMmWaveUeCmacSapProvider::NotifyConnectionSuccessful()
+{
+    m_mac->DoNotifyConnectionSuccessful();
+}
+
+void
+UeMemberMmWaveUeCmacSapProvider::SetImsi(uint64_t imsi)
+{
+    m_mac->DoSetImsi(imsi);
+}
+
+void
+MmWaveUeMac::DoNotifyConnectionSuccessful()
+{
+    NS_LOG_FUNCTION(this);
+}
+
+void
+MmWaveUeMac::DoSetImsi(uint64_t imsi)
+{
+    NS_LOG_FUNCTION(this << imsi);
+    m_imsi = imsi;
 }
 
 class UeMemberMmWaveMacSapProvider : public LteMacSapProvider
@@ -587,14 +616,12 @@ MmWaveUeMac::DoReceivePhyPdu(Ptr<Packet> p)
                 {
                     rlcPdu = p->CreateFragment(currPos, p->GetSize() - currPos);
                     currPos = p->GetSize();
-                    LteRlcSpecificLteMacSapUser* user =
-                        (LteRlcSpecificLteMacSapUser*)it->second.macSapUser;
 
                     LteMacSapUser::ReceivePduParameters rxPduParams;
                     rxPduParams.p = rlcPdu;
                     rxPduParams.rnti = m_rnti;
                     rxPduParams.lcid = macSubheaders[ipdu].m_lcid;
-                    user->ReceivePdu(rxPduParams);
+                    it->second.macSapUser->ReceivePdu(rxPduParams);
                 }
             }
         }
