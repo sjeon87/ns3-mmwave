@@ -225,6 +225,55 @@ MmWaveUePhy::GetImsi(void) const
     return m_imsi;
 }
 
+// LteUeCphySapProvider RLF/sync/cell stubs (see header note).
+uint16_t
+MmWaveUePhy::DoGetCellId()
+{
+    return m_cellId;
+}
+
+uint32_t
+MmWaveUePhy::DoGetDlEarfcn()
+{
+    return 0;
+}
+
+void
+MmWaveUePhy::DoResetPhyAfterRlf()
+{
+}
+
+void
+MmWaveUePhy::DoResetRlfParams()
+{
+}
+
+void
+MmWaveUePhy::DoStartInSyncDetection()
+{
+}
+
+void
+MmWaveUePhy::DoSetImsi(uint64_t imsi)
+{
+    SetImsi(imsi);
+}
+
+void
+MmWaveUePhy::DoNotifyOutOfSync()
+{
+}
+
+void
+MmWaveUePhy::DoNotifyInSync()
+{
+}
+
+void
+MmWaveUePhy::DoResetSyncIndicationCounter()
+{
+}
+
 void
 MmWaveUePhy::SetTxPower(double pow)
 {

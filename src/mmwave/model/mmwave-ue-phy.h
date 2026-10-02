@@ -192,6 +192,18 @@ class MmWaveUePhy : public MmWavePhy
     void UpdateSinrEstimate(uint16_t cellId, double sinr);
 
   private:
+    // LteUeCphySapProvider RLF/sync/cell hooks added in dev (plain LTE RRC never
+    // calls them on mmWave PHYs; stubs keep MemberLteUeCphySapProvider<MmWaveUePhy> linking).
+    uint16_t DoGetCellId();
+    uint32_t DoGetDlEarfcn();
+    void DoResetPhyAfterRlf();
+    void DoResetRlfParams();
+    void DoStartInSyncDetection();
+    void DoSetImsi(uint64_t imsi);
+    void DoNotifyOutOfSync();
+    void DoNotifyInSync();
+    void DoResetSyncIndicationCounter();
+
     void DoReset();
     void DoStartCellSearch(uint16_t dlEarfcn);
     void DoSynchronizeWithEnb(uint16_t cellId);
