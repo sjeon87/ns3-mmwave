@@ -36,6 +36,7 @@
 #include <ns3/log.h>
 #include <ns3/lte-common.h>
 
+#include <algorithm>
 #include <cmath>
 #include <stdlib.h> /* abs */
 
@@ -839,7 +840,7 @@ MmWaveFlexTtiMacScheduler::DoSchedTriggerReq(
                 //                        If CQI is below min threshold, drop process.
                 // (2) Calculate new number of symbols it will take to encode at lower MCS.
                 //          If this exceeds the total number of symbols, reTX with original
-                //parameters.
+                // parameters.
                 //                        If exceeds remaining symbols available in this subframe
                 //                        (but not total symbols in SF),
                 //          update DCI info and try scheduling in next SF.
@@ -1065,6 +1066,14 @@ MmWaveFlexTtiMacScheduler::DoSchedTriggerReq(
     {
         for (itRlcBuf = m_rlcBufferReq.begin(); itRlcBuf != m_rlcBufferReq.end(); itRlcBuf++)
         {
+            if (m_harqOn)
+            {
+                const auto& status = m_dlHarqProcessesStatus.at(itRlcBuf->m_rnti);
+                if (std::find(status.begin(), status.end(), 0) == status.end())
+                {
+                    continue;
+                }
+            }
             itUeInfo = ueInfo.find(itRlcBuf->m_rnti);
             //      if (itUeInfo != ueInfo.end () && itUeInfo->second.m_dlSymbols > 0)
             //      {
@@ -1168,6 +1177,14 @@ MmWaveFlexTtiMacScheduler::DoSchedTriggerReq(
         {
             if (ceBsrIt->second > 0) // UL buffer size > 0
             {
+                if (m_harqOn)
+                {
+                    const auto& status = m_ulHarqProcessesStatus.at(ceBsrIt->first);
+                    if (std::find(status.begin(), status.end(), 0) == status.end())
+                    {
+                        continue;
+                    }
+                }
                 std::map<uint16_t, struct UlCqiMapElem>::iterator itCqi =
                     m_ueUlCqi.find(ceBsrIt->first);
                 int cqi = 0;
