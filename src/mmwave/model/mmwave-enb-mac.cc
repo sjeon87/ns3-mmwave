@@ -1258,6 +1258,7 @@ MmWaveEnbMac::DoGetRachConfig()
     rc.numberOfRaPreambles = m_numberOfRaPreambles;
     rc.preambleTransMax = m_preambleTransMax;
     rc.raResponseWindowSize = m_raResponseWindowSize;
+    rc.connEstFailCount = 1;
     return rc;
 }
 
