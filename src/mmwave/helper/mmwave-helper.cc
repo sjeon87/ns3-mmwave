@@ -311,7 +311,7 @@ MmWaveHelper::DoInitialize()
 
         // create the ccMap
         std::map<uint8_t, MmWaveComponentCarrier> map;
-        map[0] = *cc;
+        map.emplace(0, *cc);
 
         this->SetCcPhyParams(map);
     }
@@ -745,7 +745,7 @@ void
 MmWaveHelper::SetCcPhyParams(std::map<uint8_t, MmWaveComponentCarrier> ccMapParams)
 {
     NS_LOG_FUNCTION(this);
-    m_componentCarrierPhyParams = ccMapParams;
+    m_componentCarrierPhyParams.swap(ccMapParams);
 }
 
 std::map<uint8_t, MmWaveComponentCarrier>

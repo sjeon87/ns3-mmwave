@@ -90,7 +90,7 @@ MmwaveThreeGppAntennaInitializationTestCase::DoRun(void)
         Ptr<MmWaveComponentCarrier> cc = CreateObject<MmWaveComponentCarrier>();
         cc->SetConfigurationParameters(phyMacConfig);
         cc->SetAsPrimary((i == 0));
-        ccMap[i] = *cc;
+        ccMap.emplace(i, *cc);
     }
 
     // assign the map of CCs to the helper

@@ -116,10 +116,10 @@ main(int argc, char* argv[])
 
     // create the CC map
     std::map<uint8_t, MmWaveComponentCarrier> ccMap;
-    ccMap[0] = *cc0;
+    ccMap.emplace(0, *cc0);
     if (useCa)
     {
-        ccMap[1] = *cc1;
+        ccMap.emplace(1, *cc1);
     }
 
     // print CC parameters
